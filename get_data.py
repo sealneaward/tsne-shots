@@ -31,6 +31,15 @@ def create_dirs():
     if not os.path.exists(CONFIG.plots.dir):
         os.makedirs(CONFIG.plots.dir)
 
+    if not os.path.exists(CONFIG.img.dir):
+        os.makedirs(CONFIG.img.dir)
+
+    if not os.path.exists(CONFIG.shots.dir):
+        os.makedirs(CONFIG.shots.dir)
+
+    if not os.path.exists(CONFIG.vae_shots.dir):
+        os.makedirs(CONFIG.vae_shots.dir)
+
 def create_shot_frame(action_types, initialize_frame):
     """
     Create shot data frame for organization
@@ -119,12 +128,12 @@ if __name__ == '__main__':
     players.to_csv(CONFIG.data.dir + 'players.csv', index=False)
 
     # get shots per player
-    # shots = pd.DataFrame(columns=shots_cols)
-    # for index, player in players.iterrows():
-    #     player_id = player['PLAYER_ID']
-    #     player_shots = api.get_shooting(player_id)
-    #     shots = shots.append(player_shots)
-    # shots.to_csv(CONFIG.data.dir + 'shots.csv', index=False)
+    shots = pd.DataFrame(columns=shots_cols)
+    for index, player in players.iterrows():
+        player_id = player['PLAYER_ID']
+        player_shots = api.get_shooting(player_id)
+        shots = shots.append(player_shots)
+    shots.to_csv(CONFIG.data.dir + 'shots.csv', index=False)
 
     shots = pd.read_csv(CONFIG.data.dir + 'shots.csv')
     action_types = shots['ACTION_TYPE'].drop_duplicates(inplace=False).tolist()

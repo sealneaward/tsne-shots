@@ -1,5 +1,8 @@
 # tsne-shots
-t-SNE visualizations of players based on shots in the 2015-2016 NBA season
+t-SNE visualizations of players based on shots in the 2015-2016 NBA season.
+To get proper representations of players and their likeliness to other players,
+we use a Variational Autoencoder neural network (VAE) to get encoded formations
+of shots, to compare with other players for clustering in t-SNE.
 
 ### Setup
 - Get dev dependancies
@@ -17,10 +20,7 @@ pip install -r requirements.txt
 python get_data.py
 ```
 
-## t-SNE
-
-Using t-SNE embeddings of high dimensional data, low dimensional representations can be made for clustering.
-To create clusters and the visualizations of the clusters, execute this command.
+- Plot shot charts
 ```
-python t-sne.py
+python savvas_plots.py
 ```
