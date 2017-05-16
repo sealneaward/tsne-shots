@@ -34,6 +34,9 @@ def create_dirs():
     if not os.path.exists(CONFIG.img.dir):
         os.makedirs(CONFIG.img.dir)
 
+    if not os.path.exists(CONFIG.hdf5.dir):
+        os.makedirs(CONFIG.hdf5.dir)
+
     if not os.path.exists(CONFIG.shots.dir):
         os.makedirs(CONFIG.shots.dir)
 
@@ -121,7 +124,7 @@ def organize_shots(shots, action_types, player, player_id):
 
 if __name__ == '__main__':
     create_dirs()
-
+    
     # get players
     players = api.get_players()
     players = players[['PLAYER', 'PLAYER_ID']]

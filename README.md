@@ -10,17 +10,31 @@ of shots, to compare with other players for clustering in t-SNE.
 sudo apt-get install python-dev libblas-dev liblapack-dev libatlas-base-dev
 ```
 
-- Install python libraries
+1. Install python libraries
 ```
 pip install -r requirements.txt
 ```
 
-- Collect data
+2. Collect data
 ```
 python get_data.py
 ```
 
-- Plot shot charts
+3. Plot shot charts
 ```
 python savvas_plots.py
 ```
+
+### VAE Encoding
+1. Create hdf5 files from images.
+```
+python data.py
+```
+
+2. Train vae from hdf5 files.
+```
+python main.py
+```
+
+
+### t-SNE Visualization
