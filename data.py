@@ -1,14 +1,16 @@
 from __future__ import print_function
 
-import cv2
-import h5py
+
 import os
 from os import listdir
 from os import path
+from PIL import Image
+import h5py
 import numpy as np
 from tqdm import tqdm
-from sklearn.model_selection import train_test_split
+
 import torch.utils.data as data
+from torchvision.datasets import ImageFolder
 
 import config as CONFIG
 
@@ -23,30 +25,38 @@ class DataSet(data.Dataset):
             location of hdf5 file of shots
         transform: torchvision.transforms
             torchvision ndarray to tensor transformations
+
+        Returns
+        -------
+        DataSet
         """
-        self.data = h5py.File(file_path, 'r')
-        self.imgs = self.data['imgs']
+        self.file_path = file_path
+        self.imgs = listdir(self.file_path)
         self.transform = transform
-        self._length = len(self.imgs)
 
     def __getitem__(self, i):
-        img = self.imgs[i]
-
+        img_path = self.imgs[i]
+        img_path = path.join(self.file_path, img_path)
+        img = Image.open(img_path)
+        img = img.resize((28,28), Image.ANTIALIAS)
+        img = img.convert('RGB')
         if self.transform is not None:
             img = self.transform(img)
 
-        return (img)
+        return img, 1
 
     def __len__(self):
-        return self._length
+        return len(self.imgs)
 
 
-def get_data(img_size=(256,256), test_split=0.2):
+def get_data(imgs_path, img_size=(256,256), test_split=0.2):
     """
     Loads all shot images into numpy arrays
 
     Parameters
     ----------
+    imgs_path: str
+        location of folder to read images from
     img_size: tuple
         img width and height sizes
     test_split: float
@@ -58,19 +68,18 @@ def get_data(img_size=(256,256), test_split=0.2):
         ndarrays of train and test images
     """
 
-    images = listdir(CONFIG.shots.dir)
+    images = listdir(imgs_path)
     shots = []
 
     for i in tqdm(range(len(images))):
         image = images[i]
-        img_path = path.join(CONFIG.shots.dir, image)
+        img_path = path.join(imgs_path, image)
         shot = cv2.imread(img_path,3)
         shot = cv2.resize(shot,img_size)
         shot_sm = cv2.pyrMeanShiftFiltering(shot, 20, 45, 3)
         shots.append(shot_sm)
 
     X = np.array(shots)
-    train_x, test_x = train_test_split(X, test_size=test_split)
 
     return train_x, test_x
 
@@ -119,7 +128,3 @@ def create_hdf5(width=256, height=256, channels=3):
         imgs[i] = test_x[i]
 
     h5_file.close()
-
-
-if __name__ == '__main__':
-    create_hdf5()

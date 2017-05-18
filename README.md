@@ -26,12 +26,12 @@ python savvas_plots.py
 ```
 
 ### VAE Encoding
-1. Create hdf5 files from images.
+1. Move train and test images into folders
 ```
-python data.py
+python create_train_test.py
 ```
 
-2. Train vae from hdf5 files.
+2. Train vae from image folders.
 ```
 python main.py
 ```
