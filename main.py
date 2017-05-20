@@ -13,7 +13,7 @@ import config as CONFIG
 
 # Parameters
 parser = argparse.ArgumentParser(description='VAE train')
-parser.add_argument('--epochs', default=1000, type=int)
+parser.add_argument('--epochs', default=100, type=int)
 parser.add_argument('--batch_size', type=int, default=128)
 parser.add_argument('--lr', default=0.001, type=float)
 parser.add_argument('--cuda', default=True, type=bool)

@@ -1,9 +1,34 @@
 from __future__ import print_function
+
 import api
 import pandas as pd
 import config as CONFIG
 import os
 import numpy as np
+
+tracked_seasons = [
+    '1996-97',
+    '1997-98',
+    '1998-99',
+    '1999-00',
+    '2000-01',
+    '2001-02',
+    '2002-03',
+    '2003-04',
+    '2004-05',
+    '2005-06',
+    '2006-07',
+    '2007-08',
+    '2008-09',
+    '2009-10',
+    '2010-11',
+    '2011-12',
+    '2012-13',
+    '2013-14',
+    '2014-15',
+    '2015-16',
+    '2016-17'
+]
 
 shots_cols = [
             'GRID_TYPE', 'GAME_ID', 'GAME_EVENT_ID', 'PLAYER_ID',
@@ -124,30 +149,52 @@ def organize_shots(shots, action_types, player, player_id):
 
 if __name__ == '__main__':
     create_dirs()
-    
+
     # get players
     players = api.get_players()
-    players = players[['PLAYER', 'PLAYER_ID']]
-    players.to_csv(CONFIG.data.dir + 'players.csv', index=False)
+    players = players[['PLAYER_NAME', 'PLAYER_ID']]
+    players.to_csv(CONFIG.data.dir + '/' + 'players.csv', index=False)
 
     # get shots per player
     shots = pd.DataFrame(columns=shots_cols)
     for index, player in players.iterrows():
         player_id = player['PLAYER_ID']
-        player_shots = api.get_shooting(player_id)
-        shots = shots.append(player_shots)
-    shots.to_csv(CONFIG.data.dir + 'shots.csv', index=False)
+        seasons = api.get_seasons(player_id)
+        for season in seasons:
+            if season not in tracked_seasons:
+                continue
 
-    shots = pd.read_csv(CONFIG.data.dir + 'shots.csv')
-    action_types = shots['ACTION_TYPE'].drop_duplicates(inplace=False).tolist()
+            print('Collecting shots for player: %d during season: %s' % (player_id, season))
+            player_shots = api.get_shooting(player_id=player_id, season=season)
+            if player_shots.empty:
+                continue
+            shots = shots.append(player_shots)
+    shots.to_csv(CONFIG.data.dir + '/' + 'shots.csv', index=False)
 
-    # organize shots per player
-    org_shots = create_shot_frame(action_types, initialize_frame=False)
-    for index, player in players.iterrows():
-        player_id = player['PLAYER_ID']
-        player = player['PLAYER']
-        player_shots = shots[shots['PLAYER_ID'] == player_id]
-        shots_player = organize_shots(player_shots, action_types, player, player_id)
-        org_shots = org_shots.append(shots_player)
+    # get league averages for each season
+    shots = pd.read_csv(CONFIG.data.dir + '/' + 'shots.csv')
+    league_averages = pd.DataFrame(columns=['SEASON_ID','GRID_TYPE', 'SHOT_ZONE_BASIC', 'SHOT_ZONE_AREA', 'SHOT_ZONE_RANGE','FGA', 'FGM', 'FG_PCT'])
+    for season in tracked_seasons:
+            print('Gettin league average for season: %s' % (season))
+            player_in_season = shots.loc[shots.SEASON_ID == season,'PLAYER_ID']
+            if player_in_season.empty:
+                continue
+            else:
+                player_in_season = player_in_season.drop_duplicates(inplace=False).values[0]
+            league_average = api.get_league_averages(player_id=player_in_season, season=season)
+            league_averages = league_averages.append(league_average)
+    league_averages.to_csv(CONFIG.data.dir + '/' + 'league_averages.csv', index=False)
 
-    org_shots.to_csv(CONFIG.data.dir + 'total_shots.csv', index=False)
+    # shots = pd.read_csv(CONFIG.data.dir + 'shots.csv')
+    # action_types = shots['ACTION_TYPE'].drop_duplicates(inplace=False).tolist()
+    #
+    # # organize shots per player
+    # org_shots = create_shot_frame(action_types, initialize_frame=False)
+    # for index, player in players.iterrows():
+    #     player_id = player['PLAYER_ID']
+    #     player = player['PLAYER']
+    #     player_shots = shots[shots['PLAYER_ID'] == player_id]
+    #     shots_player = organize_shots(player_shots, action_types, player, player_id)
+    #     org_shots = org_shots.append(shots_player)
+    #
+    # org_shots.to_csv(CONFIG.data.dir + 'total_shots.csv', index=False)
