@@ -17,7 +17,7 @@ import config as CONFIG
 class DataSet(data.Dataset):
     def __init__(self, file_path, transform=None):
         """
-        Follow conventional pytorch dataset format for h5 files,
+        Follow conventional pytorch dataset format for images
 
         Parameters
         ----------
@@ -35,15 +35,15 @@ class DataSet(data.Dataset):
         self.transform = transform
 
     def __getitem__(self, i):
-        img_path = self.imgs[i]
-        img_path = path.join(self.file_path, img_path)
+        img_name = self.imgs[i]
+        img_path = path.join(self.file_path, img_name)
         img = Image.open(img_path)
         img = img.resize((28,28), Image.ANTIALIAS)
         img = img.convert('RGB')
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, 1
+        return img, img_name
 
     def __len__(self):
         return len(self.imgs)

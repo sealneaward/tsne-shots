@@ -32,3 +32,6 @@ train.img.dir = "%s/%s" % (train.dir, "shots")
 
 val.img = ConfigSection("val_img")
 val.img.dir = "%s/%s" % (val.dir, "shots")
+
+model = ConfigSection("model")
+model.dir = "%s/%s" % (data.dir, "model")

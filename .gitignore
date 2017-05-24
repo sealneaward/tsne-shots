@@ -1,3 +1,6 @@
 *.pyc
 .idea/**
 venv/**
+data/train/**
+data/val/**
+data/img/shots/**

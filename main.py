@@ -1,14 +1,15 @@
 from __future__ import print_function
 
 import argparse
+import os
 import torch
 import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
 from torch.autograd import Variable
-import torchvision.datasets as datasets
 
 from data import DataSet
+from vae import VAE
 import config as CONFIG
 
 # Parameters
@@ -25,42 +26,6 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 args, unknown = parser.parse_known_args()
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-class VAE(nn.Module):
-    def __init__(self):
-        super(VAE, self).__init__()
-
-        self.fc1 = nn.Linear(784, 400)
-        self.fc21 = nn.Linear(400, 20)
-        self.fc22 = nn.Linear(400, 20)
-        self.fc3 = nn.Linear(20, 400)
-        self.fc4 = nn.Linear(400, 784)
-
-        self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
-
-    def encode(self, x):
-        h1 = self.relu(self.fc1(x))
-        return self.fc21(h1), self.fc22(h1)
-
-    def reparametrize(self, mu, logvar):
-        std = logvar.mul(0.5).exp_()
-        if args.cuda:
-            eps = torch.cuda.FloatTensor(std.size()).normal_()
-        else:
-            eps = torch.FloatTensor(std.size()).normal_()
-        eps = Variable(eps)
-        return eps.mul(std).add_(mu)
-
-    def decode(self, z):
-        h3 = self.relu(self.fc3(z))
-        return self.sigmoid(self.fc4(h3))
-
-    def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, 784))
-        z = self.reparametrize(mu, logvar)
-        return self.decode(z), mu, logvar
-
-
 # Setup
 model = VAE()
 if args.cuda:
@@ -69,6 +34,20 @@ if args.cuda:
 reconstruction_function = nn.BCELoss()
 reconstruction_function.size_average = False
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+if args.resume:
+    resume_path = CONFIG.model.dir + '/model.checkpoint.tar'
+    if os.path.isfile(resume_path):
+        print("=> loading checkpoint '{}'".format(resume_path))
+        checkpoint = torch.load(resume_path)
+        args.start_epoch = checkpoint['epoch']
+        best_loss = checkpoint['best_loss']
+        model.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        print("=> loaded checkpoint '{}' (epoch {})"
+              .format(resume_path, checkpoint['epoch']))
+    else:
+        print("=> no checkpoint found at '{}'".format(resume_path))
 
 def loss_function(recon_x, x, mu, logvar):
     BCE = reconstruction_function(recon_x, x)
@@ -118,21 +97,21 @@ def test(epoch):
 
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
+    return test_loss
 
+def save_checkpoint(state, is_best, filename):
+    if is_best:
+        torch.save(state, filename)
 
 if __name__ == '__main__':
     transformers = transforms.Compose([
         transforms.ToTensor()
     ])
+    model_path = CONFIG.model.dir
     train_path = CONFIG.train.img.dir
     test_path = CONFIG.val.img.dir
     train_dataset = DataSet(train_path, transform=transformers)
     test_dataset = DataSet(test_path, transform=transformers)
-
-    # train_path = CONFIG.train.dir
-    # test_path = CONFIG.val.dir
-    # train_dataset = datasets.ImageFolder(root=train_path, transform=transformers)
-    # test_dataset = datasets.ImageFolder(root=test_path, transform=transformers)
 
     train_loader = torch.utils.data.DataLoader(
         dataset=train_dataset, batch_size=args.batch_size, shuffle=True,
@@ -145,6 +124,18 @@ if __name__ == '__main__':
     )
 
     # train and test model
+    best_loss = 50000
     for epoch in range(1, args.epochs + 1):
         train(epoch)
-        test(epoch)
+        test_loss = test(epoch)
+
+        # remember best loss and save checkpoint
+        is_best = best_loss > test_loss
+        best_loss = min(best_loss, test_loss)
+
+        save_checkpoint({
+            'epoch': epoch + 1,
+            'state_dict': model.state_dict(),
+            'best_loss': best_loss,
+            'optimizer': optimizer.state_dict(),
+        }, is_best=is_best, filename=CONFIG.model.dir + '/model.checkpoint.tar')
