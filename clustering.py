@@ -26,7 +26,6 @@ def cluster(data):
     X = data.drop(['player_id', 'season_id'], axis=1, inplace=False)
     X = StandardScaler().fit_transform(X)
 
-    # db = DBSCAN(eps=0.1, min_samples=10).fit(X)
     db = DBSCAN(eps=0.11, min_samples=10).fit(X)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
@@ -55,7 +54,7 @@ def cluster(data):
                  markeredgecolor='k', markersize=6)
 
     plt.title('Estimated number of clusters: %d' % n_clusters_)
-    plt.savefig(CONFIG.plots.dir + '/overall_cluster.svg')
+    plt.savefig(CONFIG.plots.dir + '/overall_cluster.png')
     return data
 
 if __name__ == '__main__':

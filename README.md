@@ -59,7 +59,7 @@ python t-sne.py
 ```
 python clustering.py
 ```
-![reconstructed](plots/overall_cluster.svg)
+![reconstructed](plots/overall_cluster.png)
 
 ### GAN
 This may be explored at another time to see different applications, but you can generate fake shot charts in decent resolution using GAN models. For more info on generative adversarial networks, please read this [paper](https://arxiv.org/pdf/1511.06434.pdf)
