@@ -8,27 +8,11 @@ from matplotlib.colors import LinearSegmentedColormap
 import torch
 import torchvision.transforms as transforms
 from torch.autograd import Variable
+import torchvision.utils as vutils
 
 from data import DataSet
 from vae import VAE
 import config as CONFIG
-
-def get_batch(data_loader, n_images=5):
-    """
-    Load arrays of images from data loader
-
-
-    """
-    for X, target in data_loader:
-        break
-
-    X = X[:n_images]
-    X.resize_(n_images, 784)
-    X = Variable(X/255.)
-    X = X.cuda()
-
-    return X
-
 
 def reconstruction(data_loader, model, n_images=5):
     """
@@ -49,47 +33,22 @@ def reconstruction(data_loader, model, n_images=5):
     """
     # TODO: https://github.com/MorvanZhou/PyTorch-Tutorial/blob/master/tutorial-contents/404_autoencoder.py
 
-    # initialize figure
-    fig, ax = plt.subplots(2, n_images, figsize=(n_images, 2))
-    plt.ion()   # continuously plot
-    plt.show()
-
-    # custom cmap
-    bins = np.concatenate([[-np.inf], np.linspace(-9, 9, 200), [np.inf]])
-    colors = [(0.66, 0.75, 0.66), (0.9, 1.0, 0.6), (0.8, 0, 0)]
-    cm = LinearSegmentedColormap.from_list('my_list', colors, N=len(bins) - 1)
-
-    # get image data for 5 images
+    # get image data for n images
     for batch_idx, (images, _) in enumerate(data_loader):
         data = images
-        images = Variable(images.view(-1, 28*28)/255.)
-
-        # original 5 images
-        for i in range(n_images):
-            image_name = _[i].split('.')[0]
-            ax[0][i].imshow(np.reshape(images.data.cpu().numpy()[i], (28, 28)), cmap='gray')
-            ax[0][i].set_xticks(())
-            ax[0][i].set_yticks(())
-            ax[0][i].set_xlabel(image_name)
+        orig_size = data.size()
+        vutils.save_image(data, CONFIG.plots.dir + '/original_images.png',nrow=5)
 
         # run sample batch through model to get reconstructed images
         data = Variable(data)
         data = data.cuda()
         model.train()
         recon_batch, mu, logvar = model(data)
-        recon_batch = recon_batch.view(-1, 28*28)/255.
-
-        # original 5 images
-        for i in range(n_images):
-            image_name = _[i].split('.')[0]
-            ax[1][i].imshow(np.reshape(recon_batch.data.cpu().numpy()[i], (28, 28)), cmap='gray')
-            ax[1][i].set_xticks(())
-            ax[1][i].set_yticks(())
-            ax[1][i].set_xlabel(image_name)
-
+        recon_batch.data = recon_batch.data.view(n_images,3,28,28)
+        recon_size = recon_batch.data.size()
+        vutils.save_image(recon_batch.data, CONFIG.plots.dir + '/reconstructed_images.png',nrow=5)
 
         break
-    plt.savefig(CONFIG.plots.dir + '/reconstruction.png')
 
 def save_encoding(data_loader, model):
     """
@@ -104,7 +63,7 @@ def save_encoding(data_loader, model):
 
     """
     # get image data for all images
-    columns = range(60)
+    columns = range(50)
     columns = ["{:02d}".format(x) for x in columns]
     columns.extend(['player_id', 'season_id'])
     images_data = pd.DataFrame(columns=columns)
@@ -113,9 +72,11 @@ def save_encoding(data_loader, model):
         img_name = img_name[0].split('.')[0]
         img = Variable(img)
         img = img.cuda()
+
+        # create encoding through reparametrization
         recon_batch, mu, logvar = model(img)
         size = logvar.size()
-        logvar = logvar.data.view(-1, logvar.size()[0] * logvar.size()[1])
+        logvar = logvar.data.view(-1, size[0] * size[1])
 
         row = logvar.cpu().numpy().tolist()[0]
         player_id = int(img_name.split('_')[0])
@@ -132,7 +93,7 @@ def save_encoding(data_loader, model):
 
 if __name__ == '__main__':
     # params for visualizations
-    n_images = 5
+    n_images = 10
 
     transformers = transforms.Compose([
         transforms.ToTensor()
@@ -156,7 +117,7 @@ if __name__ == '__main__':
 
         reconstruction(data_loader=loader, model=model, n_images=n_images)
         loader.batch_size = 1
-        save_encoding(data_loader=loader, model=model)
+        # save_encoding(data_loader=loader, model=model)
 
     else:
         print("=> no checkpoint found at '{}'".format(resume_path))

@@ -6,11 +6,11 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
-        self.fc1 = nn.Linear(784, 400)
-        self.fc21 = nn.Linear(400, 20)
-        self.fc22 = nn.Linear(400, 20)
-        self.fc3 = nn.Linear(20, 400)
-        self.fc4 = nn.Linear(400, 784)
+        self.fc1 = nn.Linear(2352, 1000)
+        self.fc21 = nn.Linear(1000, 50)
+        self.fc22 = nn.Linear(1000, 50)
+        self.fc3 = nn.Linear(50, 1000)
+        self.fc4 = nn.Linear(1000, 2352)
 
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
@@ -33,6 +33,7 @@ class VAE(nn.Module):
 
     def forward(self, x):
         size = x.size()
-        mu, logvar = self.encode(x.view(-1, 784))
+        x = x.view(-1, 2352)
+        mu, logvar = self.encode(x)
         z = self.reparametrize(mu, logvar)
         return self.decode(z), mu, logvar

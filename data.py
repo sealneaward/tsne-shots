@@ -15,7 +15,7 @@ from torchvision.datasets import ImageFolder
 import config as CONFIG
 
 class DataSet(data.Dataset):
-    def __init__(self, file_path, transform=None):
+    def __init__(self, file_path, transform=None, n_channels=3):
         """
         Follow conventional pytorch dataset format for images
 
@@ -33,15 +33,16 @@ class DataSet(data.Dataset):
         self.file_path = file_path
         self.imgs = listdir(self.file_path)
         self.transform = transform
+        self.n_channels = n_channels
 
     def __getitem__(self, i):
         img_name = self.imgs[i]
         img_path = path.join(self.file_path, img_name)
         img = Image.open(img_path)
         img = img.resize((28,28), Image.ANTIALIAS)
-        img = img.convert('RGB')
         if self.transform is not None:
             img = self.transform(img)
+            size = img.size()
 
         return img, img_name
 
@@ -49,7 +50,7 @@ class DataSet(data.Dataset):
         return len(self.imgs)
 
 
-def get_data(imgs_path, img_size=(256,256), test_split=0.2):
+def get_data(imgs_path, img_size=(3,256,256), test_split=0.2, n_channels=3):
     """
     Loads all shot images into numpy arrays
 
@@ -74,10 +75,9 @@ def get_data(imgs_path, img_size=(256,256), test_split=0.2):
     for i in tqdm(range(len(images))):
         image = images[i]
         img_path = path.join(imgs_path, image)
-        shot = cv2.imread(img_path,3)
+        shot = cv2.imread(img_path,n_channels)
         shot = cv2.resize(shot,img_size)
-        shot_sm = cv2.pyrMeanShiftFiltering(shot, 20, 45, 3)
-        shots.append(shot_sm)
+        shots.append(shot)
 
     X = np.array(shots)
 
