@@ -1,3 +1,4 @@
 data/hdf5/shots.h5py filter=lfs diff=lfs merge=lfs -text
 data/hdf5/shots_train.h5py filter=lfs diff=lfs merge=lfs -text
 data/hdf5/shots_test.h5py filter=lfs diff=lfs merge=lfs -text
+data/shots.csv filter=lfs diff=lfs merge=lfs -text

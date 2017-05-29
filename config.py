@@ -20,3 +20,18 @@ vae_shots.dir = "%s/%s" % (img.dir, "vae_shots")
 
 plots = ConfigSection("plots")
 plots.dir = "%s/%s" % (REAL_PATH, "plots")
+
+train = ConfigSection("train")
+train.dir = "%s/%s" % (data.dir, "train")
+
+val = ConfigSection("val")
+val.dir = "%s/%s" % (data.dir, "val")
+
+train.img = ConfigSection("train_img")
+train.img.dir = "%s/%s" % (train.dir, "shots")
+
+val.img = ConfigSection("val_img")
+val.img.dir = "%s/%s" % (val.dir, "shots")
+
+model = ConfigSection("model")
+model.dir = "%s/%s" % (data.dir, "model")
