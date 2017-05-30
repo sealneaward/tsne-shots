@@ -72,8 +72,3 @@ python dcgan.py
 ![gan_real](real_samples.png)
 #### Fake Examples
 ![gan_fake](fake_samples.png)
-
-
-### TODO
-
-- [ ] create mean representations of different clusters

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
+from PIL import Image
 
 import config as CONFIG
 
@@ -57,10 +58,49 @@ def cluster(data):
     plt.savefig(CONFIG.plots.dir + '/overall_cluster.png')
     return data
 
+def mean_images(data):
+    """
+    Get images of each player shot charts and create mean image
+    from identified from clusters.
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+
+    Returns
+    -------
+    """
+    roles = data['cluster'].drop_duplicates(inplace=False)
+    w = 256
+    h = 256
+
+    for role in roles:
+        arr = np.zeros((w,h,3), np.float)
+        role_players = data.loc[data.cluster == role, :]
+        n_players = len(role_players)
+        for index, player in role_players.iterrows():
+            player_id = player['player_id']
+            season_id = player['season_id']
+            img_name = str(int(player_id)) + '_' + season_id + '.jpg'
+            img = Image.open(CONFIG.shots.dir + '/' + img_name)
+            img = img.resize((w,h))
+            img = np.array(img,dtype=np.float)
+            arr = arr+img/n_players
+
+        arr = np.array(np.round(arr),dtype=np.uint8)
+        out = Image.fromarray(arr,mode="RGB")
+        plt.subplot(1, 3, int(role + 1))
+        plt.axis('off')
+        plt.imshow(out)
+
+    plt.savefig(CONFIG.plots.dir + '/roles.png')
+
+
 if __name__ == '__main__':
     data = pd.read_csv(CONFIG.data.dir + '/tsne_shots.csv', header=0)
     data = cluster(data)
     data = data[['player_id', 'season_id', 'cluster']]
+    mean_images(data)
     data = data.sort(['player_id', 'season_id'], ascending=[1,1])
     data.to_csv(CONFIG.data.dir + '/overall_cluster.csv', index=False)
     data = data.loc[data.season_id == '2015-16', :]
