@@ -27,11 +27,6 @@ def tsne_vis(shots):
     shots['tsne_y'] = vis_y
     shots.to_csv(CONFIG.data.dir + '/tsne_shots.csv', index=False)
 
-    fig, ax = plt.subplots()
-    plt.scatter(vis_x, vis_y, c=labels)
-    plt.savefig(CONFIG.plots.dir + '/tsne-shots.svg')
-    plt.close()
-
 if __name__ == '__main__':
     shots = pd.read_csv(CONFIG.data.dir + '/encoded_data.csv')
     # shots = shots.loc[shots.season_id == '2015-16',:]
