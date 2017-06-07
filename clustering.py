@@ -54,6 +54,7 @@ def cluster(data):
         plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
                  markeredgecolor='k', markersize=6)
 
+    plt.axis('off')
     plt.title('Estimated number of clusters: %d' % n_clusters_)
     plt.savefig(CONFIG.plots.dir + '/overall_cluster.png')
     return data

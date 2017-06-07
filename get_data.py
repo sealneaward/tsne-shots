@@ -6,6 +6,9 @@ import config as CONFIG
 import os
 import numpy as np
 
+# turn warning off
+pd.options.mode.chained_assignment = None
+
 tracked_seasons = [
     '1996-97',
     '1997-98',
@@ -151,9 +154,7 @@ if __name__ == '__main__':
     create_dirs()
 
     # get players
-    players = api.get_players()
-    players = players[['PLAYER_NAME', 'PLAYER_ID']]
-    players.to_csv(CONFIG.data.dir + '/' + 'players.csv', index=False)
+    players = pd.read_csv(CONFIG.data.dir + '/players.csv')
 
     # get shots per player
     shots = pd.DataFrame(columns=shots_cols)
