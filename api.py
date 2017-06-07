@@ -9,7 +9,7 @@ HEADERS = {
     'x-nba-stats-token': 'true',
     'Referer': 'http://stats.nba.com/player/',
     'Connection': 'keep-alive',
-    'x-nba-stats-origin': 'stats',
+    'x-nba-stats-origin': 'stats'
 }
 
 def get_shooting(player_id, game_id='', season='2015-16'):
